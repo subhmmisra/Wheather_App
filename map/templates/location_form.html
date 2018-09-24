@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Form</title>
+	<style>
+	fieldset{
+		margin-top: 150px;
+	}
+	legend{
+		color:white;
+		}
+		p{
+			padding-left: 20px;
+			color: white;
+		}
+		input{
+			float: right;
+			margin-right: : 20px;	
+		}
+		#submit{
+			width:99%;
+			margin-top: 3px;
+		}
+		.errorlist{
+			color: red;
+		}
+
+	</style>
+
+</head>
+<body>
+	<fieldset>
+		<legend>Add Location</legend>
+	<form>
+		{% csrf_token %}
+		{{form.as_p}}
+		<button id="submit">Submit</button>
+	</form>	
+	</fieldset>
+<script type="text/javascript">
+
+  $('#submit').on('click', function (event) {
+    event.preventDefault();
+    // using jQuery
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+    $.ajax({
+        type: 'POST',
+        url: '/add/location/',
+        data: {
+            name: $('#id_name').val(),
+            lat: $('#id_lat').val(),
+            lng: $('#id_lng').val()
+        },
+        success: (data) => {
+            console.log(data);
+            $('.aside').css({
+                'display': 'block'
+            });
+            $('.main').html(data);
+        }
+    });
+});
+</script>
+</body>
+</html>

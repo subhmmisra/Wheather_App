@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title>Assignment</title>
+  <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <style>
+  body {
+      margin: 0;
+      padding :0;
+    }
+    #second_hr{
+      width:250px;
+      height:0.5px;
+      background-color: lightgray;
+    }
+    .map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      z-index: -1;
+    }
+    .aside{
+          background-color: rgba(0, 0, 0, 0.9);
+          position: absolute;
+          z-index: 5;
+          display: none;
+          height:93%;
+          width:300px;
+
+        }
+    .nav{
+      height: 50px;
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 9;
+    }
+    .report_text{
+      color: red;
+      font-size: 30px;
+
+    }
+
+    .img{
+      width: 65px;
+      height: 65px;
+    
+      /*padding-bottom:30px;
+      margin-right: 50px;
+    */}
+    #humidity_icon{
+      display: relative;
+      padding-left: 20px;
+    }
+    #humidity_data{
+      /*display: inline;*/
+      display: inline;
+      float:right;
+      margin-right: 10px;
+    }
+    #report_heading{
+      color: white;
+      text-align: center;
+    }
+    #windy_icon{
+      display: relative;
+      padding-left: 20px;
+    }
+    #windy_data{
+      display: relative;
+      float:right;
+      margin-right: 10px;
+
+    }
+    #main_img{
+      width: 110px;
+      height: 110px;
+      display: block;
+      margin-left: 80px;
+      margin-top: 50px;
+      text-align: center;     
+    }
+    #main_icon{
+      text-align: center;
+      font-family: sans-serif;
+      color: white;
+    }
+    #temp_icon{
+      width: 12px;
+      height: 40px;
+      padding-left: 20px;
+      display: relative;
+      /*padding-bottom: 20px;*/
+    }    
+    #temp_data{
+      display: relative;
+      float: right;
+      margin-right: 10px;
+    }
+    #add_button{
+      float: right;
+
+      margin-top: 10px;
+      margin-right: 10px; 
+      height: 30px;
+    }
+    #close{
+      color:red;
+      float: right;
+      margin:5px 5px 0 0 ;
+    }
+
+</style>
+  </head>
+<body>
+<div class="nav">
+  <button id="add_button">Add Location</button>
+</div>
+<div id='map-popups' class='map'> </div>
+<div class="aside"  id="container">
+  <button id="close">X</button>
+  <section class="main"></section>
+</div>
+<script>
+
+var whether_report;
+var flag = false;
+L.mapbox.accessToken = 'pk.eyJ1Ijoic3ViaG1taXNyYSIsImEiOiJjam02ZzB2bWkxNmJtM3Fxcmtpdm9pM2s3In0.LvmKBx7bsS6k5GZErn4ZTw';
+var mapPopups = L.mapbox.map('map-popups', 'mapbox.streets')
+    .setView([22.5739, 72.9629], 5);
+var myLayer = L.mapbox.featureLayer().addTo(mapPopups);
+
+mapPopups.scrollWheelZoom.enable();
+var markers = [];
+var whether_icon = {
+    "rain": "http://download.spinetix.com/content/widgets/icons/weather/rain3.png",
+    "sun": "https://cdn1.iconfinder.com/data/icons/weather-elements/512/Weather_SunGradient.png",
+    "cloud": "http://icon-park.com/imagefiles/simple_weather_icons_partly_cloudy.png"
+}
+$('#close').on('click', function () {
+    $('.aside').css({
+        'display': 'none'
+    });
+});
+$('#add_button').on('click', function () {
+    $.ajax({
+        type: "GET",
+        url: 'add/location/',
+        timeout: 2000,
+        success: function (data) {
+            $('.aside').css({
+                'display': 'block'
+            });
+            $('.main').html(data);
+            //dasgdddddddddddddddddddddddddddddddddd
+
+        },
+        error: function () {
+            alert("Error!! Please Try Again Later!")
+        }
+        //sdddddddddddddddddddddddddddddddddddd
+    });
+});
+$(document).ready(function () {
+
+    $.ajax({
+        type: "GET",
+        url: 'location/',
+        timeout: 2000,
+        success: function (data) {
+            console.log(data.name);
+            data.forEach(function (element, index) {
+                console.log(L.marker([element['lat'], element['lng']], clickable = true))
+                markers.push(L.marker([element['lat'], element['lng']], clickable = true));
+            });
+
+            markers.forEach(function (element, index) {
+                element.addTo(mapPopups);
+                element.bindPopup("Lat: " + element.getLatLng()['lat'] + ", Lng: " + element.getLatLng()['lng'])
+                $(element).on('mouseover', () => {
+                    element.openPopup();
+                });
+                $(element).on('click', () => {
+                    if (window.flag === false) {
+                        window.flag = true;
+                        mapPopups.setView(new L.LatLng(element.getLatLng()['lat'], element.getLatLng()['lng']), 7);
+                        $.ajax({
+                            type: 'GET',
+                            url: 'https://api.foursquare.com/v2/venues/search?client_id=IM1VXCVIZFXJWQD3SW5AMY5JFZLM5WZHJQHHHX252VYYAOEA&client_secret=NXY5SKVGLCAHUBULQUVNDRU530NPQPRLGHO55FANGNLUXNA4&v=20180923&ll=' + element.getLatLng()['lat'] + "," + element.getLatLng()['lng'],
+                            success: function (data) {
+                                let marker_location = data;
+                                console.log(data)
+                                let current_report = {
+                                    temperature: whether_report.currently.temperature,
+                                    humidity: whether_report.currently.humidity,
+                                    wind_speed: whether_report.currently.windSpeed,
+                                    lat: whether_report.latitude,
+                                    lng: whether_report.longitude,
+                                    icon: whether_report.currently.icon
+                                }
+                                console.log(current_report);
+                                $('.aside').css({
+                                    'display': 'block'
+                                });
+
+                                let perm_content = '<h2 id ="report_heading">Whether Report</h2><hr><img id="main_img" class ="img"' +
+                                    ' src="" alt="current whether ' +
+                                    'icon" title=""><hr id="second_hr">' +
+                                    '<p><img class ="img" id="humidity_icon" src="http://icon-park.com/imagefiles/simple_weather_icons_partly_cloudy.png" alt="Humidity' +
+                                    'icon" title="Humidity">' + '<span id="humidity_data" class="report_text">' + current_report.humidity + '</span></p>' +
+                                    '<p><img id="windy_icon" align= "middle" class ="img" src="http://icongal.com/gallery/image/43065/flag_weather_wind_windy_storm.png" alt="windy' +
+                                    'whether icon" title="windy">' + '<span id="windy_data" class="report_text">' + current_report.wind_speed +
+                                    'mph</span></p>' +
+                                    '<p><img  id="temp_icon" class ="img" src="https://mbtskoudsalg.com/images/temperature-clipart-4.png" alt="Temperature' + 'icon" title="Temperature"> ' + '<span id="temp_data" class="report_text">' + current_report.temperature +
+                                    ' F</span></p><h4 class="report_text" id="main_icon">' + current_report.icon + '</h4>'
+
+                                $('.main').html(perm_content);
+                                if (current_report.icon.includes('cloud')) {
+                                    $('#main_img').attr('src', window.whether_icon['cloud'])
+                                }
+                                else if (current_report.icon.includes('rain')) {
+                                    $('#main_img').attr('src', window.whether_icon['rain'])
+                                }
+                                else {
+                                    $('#main_img').attr('src', window.whether_icon['sun'])
+                                }
+
+
+                            },
+                            error: function () {
+                                alert("Error!! Please Try Again Later!")
+                            }
+                        });
+                    }
+                    else {
+                        window.flag = false;
+                        $('.aside').css({
+                            'display': 'none'
+                        });
+                        mapPopups.setView(new L.LatLng(22.5739, 72.9629), 5);
+                    }
+
+                    console.log(element.getLatLng()['lat']);
+
+                    $.ajax({
+                        type: 'GET',
+                        dataType: "jsonp",
+                        url: 'https://api.darksky.net/forecast/4315c04d000b476eb80c07affa6200d8/' + element.getLatLng()['lat'] + "," + element.getLatLng()['lng'],
+
+                        success: function (data) {
+                            window.whether_report = data
+
+
+                        },
+                        error: function () {
+                            alert("Error!! Please Try Again Later!")
+                        }
+
+                    });
+
+                });
+            });
+
+        }
+    });
+});
+$('#submit').on('click', function (event) {
+    event.preventDefault();
+    // using jQuery
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: function (xhr, settings) {
+            if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                xhr.setRequestHeader("X-CSRFToken", csrftoken);
+            }
+        }
+    });
+    $.ajax({
+        type: 'POST',
+        url: '/add/location/',
+        data: {
+            name: $('#id_name').val(),
+            lat: $('#id_lat').val(),
+            lng: $('#id_lng').val()
+        },
+        success: (data) => {
+            console.log(data);
+            $('.aside').css({
+                'display': 'block'
+            });
+            $('.main').html(data);
+        },
+        error: function () {
+            alert("Error!! Please Try Again Later!")
+        }
+    });
+});
+</script>
+
+
+</body>
+</html>
