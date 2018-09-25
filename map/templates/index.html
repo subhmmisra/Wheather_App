@@ -1,21 +1,27 @@
+<!--Doctype Declaration-->
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset=utf-8 />
   <title>Assignment</title>
-  <script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+  <meta name="viewport" content="width=device-width, initial scale=1" />
   <link href='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.css' rel='stylesheet' />
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  
+  
+  <!--internal cascading style sheet-->
+  <!--Internal css due to single page web application-->
   <style>
   body {
       margin: 0;
       padding :0;
     }
+    /*horizontal line style*/
     #second_hr{
       width:250px;
       height:0.5px;
       background-color: lightgray;
     }
+    /*container of the map*/
     .map {
       position: absolute;
       top: 0;
@@ -23,6 +29,7 @@
       width: 100%;
       z-index: -1;
     }
+    /*container for weather report details*/
     .aside{
           background-color: rgba(0, 0, 0, 0.9);
           position: absolute;
@@ -32,18 +39,22 @@
           width:300px;
 
         }
+    /*navigation bar*/
     .nav{
       height: 50px;
       width: 100%;
       background-color: rgba(0, 0, 0, 0.8);
       z-index: 9;
     }
+    /*text styling of report*/
     .report_text{
       color: red;
       font-size: 30px;
 
     }
-
+  /*report icon size*/
+    
+    /*Report icons styling*/
     .img{
       width: 65px;
       height: 65px;
@@ -100,6 +111,10 @@
       float: right;
       margin-right: 10px;
     }
+    
+    /*End of report styling css*/
+    
+    
     #add_button{
       float: right;
 
@@ -107,45 +122,74 @@
       margin-right: 10px; 
       height: 30px;
     }
+    /*Aside close button*/
     #close{
       color:red;
       float: right;
       margin:5px 5px 0 0 ;
     }
-
+</*Emd of Page styling*/>
 </style>
   </head>
 <body>
+  <!--Navigation bar for the page-->
 <div class="nav">
   <button id="add_button">Add Location</button>
 </div>
+  
+  <!--Container for the map-->
 <div id='map-popups' class='map'> </div>
+  
+  <!--Container for the aside-->
 <div class="aside"  id="container">
+  <!--Close button-->
   <button id="close">X</button>
+  
+  <!--main section for the display report-->
   <section class="main"></section>
 </div>
+  <!--Script-->
+  
+  <!--Internal Script Due To Single Page Web Application-->
 <script>
-
+//global variable declaration
 var whether_report;
 var flag = false;
+
+//Access Token For The Map Api  
 L.mapbox.accessToken = 'pk.eyJ1Ijoic3ViaG1taXNyYSIsImEiOiJjam02ZzB2bWkxNmJtM3Fxcmtpdm9pM2s3In0.LvmKBx7bsS6k5GZErn4ZTw';
+
+//Object of the map
 var mapPopups = L.mapbox.map('map-popups', 'mapbox.streets')
     .setView([22.5739, 72.9629], 5);
+  
+//main layer for map
 var myLayer = L.mapbox.featureLayer().addTo(mapPopups);
 
+//enable scroll wheel zoom
 mapPopups.scrollWheelZoom.enable();
+  
+//markers array: for storing markers
 var markers = [];
+
+//weather icons links
 var whether_icon = {
     "rain": "http://download.spinetix.com/content/widgets/icons/weather/rain3.png",
     "sun": "https://cdn1.iconfinder.com/data/icons/weather-elements/512/Weather_SunGradient.png",
     "cloud": "http://icon-park.com/imagefiles/simple_weather_icons_partly_cloudy.png"
 }
+
+//close button click event
 $('#close').on('click', function () {
     $('.aside').css({
         'display': 'none'
     });
 });
+
+//add button click event
 $('#add_button').on('click', function () {
+    
+  //Using Ajax for requesting form from backend server
     $.ajax({
         type: "GET",
         url: 'add/location/',
@@ -164,8 +208,11 @@ $('#add_button').on('click', function () {
         //sdddddddddddddddddddddddddddddddddddd
     });
 });
+  
+//window load event
 $(document).ready(function () {
-
+//Using Ajax for requesting marker data from backend server
+  
     $.ajax({
         type: "GET",
         url: 'location/',
@@ -176,13 +223,15 @@ $(document).ready(function () {
                 console.log(L.marker([element['lat'], element['lng']], clickable = true))
                 markers.push(L.marker([element['lat'], element['lng']], clickable = true));
             });
-
+          //adding markers to the map
             markers.forEach(function (element, index) {
                 element.addTo(mapPopups);
                 element.bindPopup("Lat: " + element.getLatLng()['lat'] + ", Lng: " + element.getLatLng()['lng'])
                 $(element).on('mouseover', () => {
                     element.openPopup();
                 });
+              //adding click event to markers
+              
                 $(element).on('click', () => {
                     if (window.flag === false) {
                         window.flag = true;
@@ -191,6 +240,8 @@ $(document).ready(function () {
                             type: 'GET',
                             url: 'https://api.foursquare.com/v2/venues/search?client_id=IM1VXCVIZFXJWQD3SW5AMY5JFZLM5WZHJQHHHX252VYYAOEA&client_secret=NXY5SKVGLCAHUBULQUVNDRU530NPQPRLGHO55FANGNLUXNA4&v=20180923&ll=' + element.getLatLng()['lat'] + "," + element.getLatLng()['lng'],
                             success: function (data) {
+                              //adding data coming from the server
+                              
                                 let marker_location = data;
                                 console.log(data)
                                 let current_report = {
@@ -205,7 +256,7 @@ $(document).ready(function () {
                                 $('.aside').css({
                                     'display': 'block'
                                 });
-
+                                //permanent data for aside
                                 let perm_content = '<h2 id ="report_heading">Whether Report</h2><hr><img id="main_img" class ="img"' +
                                     ' src="" alt="current whether ' +
                                     'icon" title=""><hr id="second_hr">' +
@@ -216,7 +267,7 @@ $(document).ready(function () {
                                     'mph</span></p>' +
                                     '<p><img  id="temp_icon" class ="img" src="https://mbtskoudsalg.com/images/temperature-clipart-4.png" alt="Temperature' + 'icon" title="Temperature"> ' + '<span id="temp_data" class="report_text">' + current_report.temperature +
                                     ' F</span></p><h4 class="report_text" id="main_icon">' + current_report.icon + '</h4>'
-
+//differentiate icons according to the data
                                 $('.main').html(perm_content);
                                 if (current_report.icon.includes('cloud')) {
                                     $('#main_img').attr('src', window.whether_icon['cloud'])
@@ -244,7 +295,8 @@ $(document).ready(function () {
                     }
 
                     console.log(element.getLatLng()['lat']);
-
+//ajax request ffrom darksky api
+//JSONP for CORS
                     $.ajax({
                         type: 'GET',
                         dataType: "jsonp",
@@ -267,9 +319,18 @@ $(document).ready(function () {
         }
     });
 });
+
+//adding click event to form submit button
 $('#submit').on('click', function (event) {
+  //preventing button default behaviour
     event.preventDefault();
     // using jQuery
+  /*
+  PROTECTING WEB FORM FROM CROSS SITE REQUEST FORGERY
+  ADDDING CSRF TOKEN coming from the backend
+  adding csrf token of form in every COOKIE header
+  
+  */
     function getCookie(name) {
         var cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -285,12 +346,14 @@ $('#submit').on('click', function (event) {
         }
         return cookieValue;
     }
+  //CSRF token
     var csrftoken = getCookie('csrftoken');
 
     function csrfSafeMethod(method) {
         // these HTTP methods do not require CSRF protection
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
     }
+  //adding csrf to every request header X-CSRFToken header
     $.ajaxSetup({
         beforeSend: function (xhr, settings) {
             if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -298,6 +361,7 @@ $('#submit').on('click', function (event) {
             }
         }
     });
+  //sending form data coming from front end to backend
     $.ajax({
         type: 'POST',
         url: '/add/location/',
@@ -318,8 +382,10 @@ $('#submit').on('click', function (event) {
         }
     });
 });
+//end of script require for map
 </script>
-
-
+  
+<script src='https://api.mapbox.com/mapbox.js/v3.0.1/mapbox.js'></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 </body>
 </html>
